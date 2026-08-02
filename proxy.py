@@ -34,6 +34,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
+
+@app.get("/v1/models")
+async def get_models():
+    try:
+        prefill_models_response = await app.state.prefill_client.get("/models")
+        prefill_models_response.raise_for_status()
+        return prefill_models_response.json()
+    except Exception as e:
+        return {"error": f"Failed to fetch models from prefill service: {str(e)}"}
+   
+
 @app.post("/v1/completions")
 async def create_completions(request: Request):
 

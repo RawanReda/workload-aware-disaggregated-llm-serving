@@ -44,8 +44,9 @@ fi
 # a function that waits vLLM server to start
 wait_for_server() {
   local port=$1
-  timeout 1200 bash -c "
-    until curl -i localhost:${port}/v1/models > /dev/null; do
+  echo "Waiting for vLLM server on port ${port}..."
+  timeout 60 bash -c "
+    until curl -fsS 127.0.0.1:${port}/v1/models > /dev/null; do
       sleep 1
     done" && return 0 || return 1
 }
@@ -57,25 +58,28 @@ wait_for_server() {
 CUDA_VISIBLE_DEVICES=0 vllm serve $MODEL_NAME \
     --host 0.0.0.0 \
     --port 8100 \
-    --max-model-len 100 \
     --gpu-memory-utilization 0.8 \
     --trust-remote-code \
     --kv-transfer-config \
-    '{"kv_connector": "ExampleConnector","kv_role":"kv_producer","kv_rank":0,"kv_parallel_size":2,"kv_buffer_size":"1e9","kv_port":"14579","kv_connector_extra_config":{"proxy_ip":"'"$VLLM_HOST_IP"'","proxy_port":"30001","http_ip":"'"$VLLM_HOST_IP"'","http_port":"8100","send_type":"PUT_ASYNC"}}' &
+    '{"kv_connector": "LMCacheConnectorV1","kv_role":"kv_producer","kv_rank":0,"kv_parallel_size":2,"kv_buffer_size":"1e9","kv_port":"14579","kv_connector_extra_config":{"proxy_ip":"'"$VLLM_HOST_IP"'","proxy_port":"30001","http_ip":"'"$VLLM_HOST_IP"'","http_port":"8100","send_type":"PUT_ASYNC"}}' &
 
 # decoding instance, which is the KV consumer  
 CUDA_VISIBLE_DEVICES=1 vllm serve $MODEL_NAME \
     --host 0.0.0.0 \
     --port 8200 \
-    --max-model-len 100 \
     --gpu-memory-utilization 0.8 \
     --trust-remote-code \
     --kv-transfer-config \
-    '{"kv_connector": "ExampleConnector","kv_role":"kv_consumer","kv_rank":1,"kv_parallel_size":2,"kv_buffer_size":"1e10","kv_port":"14580","kv_connector_extra_config":{"proxy_ip":"'"$VLLM_HOST_IP"'","proxy_port":"30001","http_ip":"'"$VLLM_HOST_IP"'","http_port":"8200","send_type":"PUT_ASYNC"}}' &
+    '{"kv_connector": "LMCacheConnectorV1","kv_role":"kv_consumer","kv_rank":1,"kv_parallel_size":2,"kv_buffer_size":"1e10","kv_port":"14580","kv_connector_extra_config":{"proxy_ip":"'"$VLLM_HOST_IP"'","proxy_port":"30001","http_ip":"'"$VLLM_HOST_IP"'","http_port":"8200","send_type":"PUT_ASYNC"}}' &
 
 # wait until prefill and decode instances are ready
+echo "Waiting for 8100..."
 wait_for_server 8100
+echo "8100 is ready"
+
+echo "Waiting for 8200..."
 wait_for_server 8200
+echo "8200 is ready"
 
 # launch a proxy server that opens the service at port 8000
 # the workflow of this proxy:
@@ -85,7 +89,8 @@ wait_for_server 8200
 #   instance
 # NOTE: the usage of this API is subject to change --- in the future we will 
 # introduce "vllm connect" to connect between prefill and decode instances
-python3 ./prefill_proxy.py &
+echo "Launching the proxy server at port 8000..."
+python3 ./proxy.py &
 sleep 1
 
 # serve two example requests
@@ -108,18 +113,18 @@ output2=$(curl -X POST -s http://localhost:8000/v1/completions \
 }')
 
 
-# Cleanup commands
-pgrep python | xargs kill -9
-pkill -f python
+# # Cleanup commands
+# pgrep python | xargs kill -9
+# pkill -f python
 
-echo ""
+# echo ""
 
-sleep 1
+# sleep 1
 
-# Print the outputs of the curl requests
-echo ""
-echo "Output of first request: $output1"
-echo "Output of second request: $output2"
+# # Print the outputs of the curl requests
+# echo ""
+# echo "Output of first request: $output1"
+# echo "Output of second request: $output2"
 
-echo "🎉🎉 Successfully finished 2 test requests! 🎉🎉"
-echo ""
+# echo "🎉🎉 Successfully finished 2 test requests! 🎉🎉"
+# echo ""
