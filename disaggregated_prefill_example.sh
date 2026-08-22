@@ -45,7 +45,7 @@ fi
 wait_for_server() {
   local port=$1
   echo "Waiting for vLLM server on port ${port}..."
-  timeout 60 bash -c "
+  timeout 120 bash -c "
     until curl -fsS 127.0.0.1:${port}/v1/models > /dev/null; do
       sleep 1
     done" && return 0 || return 1
