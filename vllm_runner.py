@@ -2,6 +2,8 @@ import subprocess
 import yaml
 import torch
 import time
+import os 
+import signal 
 
 with open("gpu_config.yaml", "r") as f:
     gpu_config = yaml.safe_load(f)
@@ -20,32 +22,40 @@ for gpu_split, config in configs.items():
 
     log_file = "run_script.txt"
 
-    # install vllm, nixl 
-    process = subprocess.Popen( [ 
-        "./disaggregated_prefill_example.sh", 
-        ",".join(map(str, prefill["gpus"])), 
-        str(prefill["tp"]),
-        str(prefill["pp"]),
-        ",".join(map(str, decoder["gpus"])),
-        str(decoder["tp"]),
-        str(decoder["pp"]),
-        ],
-        stdout=open(log_file, "w"),
-        stderr=subprocess.STDOUT,)
+    try: 
+        process = subprocess.Popen( [ 
+            "./disaggregated_prefill_example.sh", 
+            ",".join(map(str, prefill["gpus"])), 
+            str(prefill["tp"]),
+            str(prefill["pp"]),
+            ",".join(map(str, decoder["gpus"])),
+            str(decoder["tp"]),
+            str(decoder["pp"]),
+            ],
+            stdout=open(log_file, "w"),
+            stderr=subprocess.STDOUT,
+            start_new_session=True)
 
-    while True:
-        with open(log_file, "r") as f:
-            log_contents = f.read()
-        if "SERVERS_READY" in log_contents:
-            print("Servers are ready. Running experimental_setup.py...")
-            break
-        if process.poll() is not None:
-            print("Process terminated unexpectedly. Check the log file for details.")
-            raise RuntimeError("Process terminated unexpectedly.")
-        time.sleep(1)
-        
-
-    subprocess.run(["python3", "experimental_setup.py"])
-
-    process.terminate()
-    process.wait()
+        while True:
+            with open(log_file, "r") as f:
+                log_contents = f.read()
+            if "SERVERS_READY" in log_contents:
+                print("Servers are ready. Running experimental_setup.py...")
+                break
+            if process.poll() is not None:
+                print("Process terminated unexpectedly. Check the log file for details.")
+                raise RuntimeError("Process terminated unexpectedly.")
+            time.sleep(1)
+    
+        gpu_split = f"p_{'_'.join(map(str, prefill['gpus']))}_d_{'_'.join(map(str, decoder['gpus']))}"
+        subprocess.run(["python3", "experimental_setup.py", gpu_split])
+    except KeyboardInterrupt:
+        print("Keyboard interrupt received.")
+    finally: 
+        print("Force killing process group...")
+        os.killpg(
+            os.getpgid(process.pid),
+            signal.SIGKILL
+        )
+        process.wait()
+        print("Experiment cleanup complete")

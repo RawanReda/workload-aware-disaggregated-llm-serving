@@ -1,24 +1,35 @@
 import subprocess
+import os
+import sys
 
 request_rates = [1, 2, 4, 8, 16, 32]
 workload_profile = [(1800, 100), (100, 1800), (950, 950)]
 
 
-bench_results_file = "bench_results.txt"
+gpu_split = sys.argv[1]
+
+gpu_split_folder = f"gpu_split_{gpu_split}"
+results_dir = f"results/{gpu_split_folder}"
+os.makedirs(results_dir, exist_ok=True)
+
+print(f"Running benchmarks for GPU split: {gpu_split}")
 
 def run_benchmarks():
     for rate in request_rates:
-        with open(bench_results_file, "a") as f:
-            for input_len, output_len in workload_profile:
-                f.write(f"Request Rate: {rate}\n")
-                f.write(f"Input length: {input_len}, Output length: {output_len}\n")
-                subprocess.run([
-                    "vllm", "bench", "serve",
-                    "--dataset-name", "random",
-                    "--input-len", str(input_len),
-                    "--output-len", str(output_len),
-                    "--request-rate", str(rate),
-                ], stdout=f, stderr=subprocess.STDOUT, text=True)
+        for input_len, output_len in workload_profile:
+            bench_results_file = f"{results_dir}/rate_{rate}_input_{input_len}_output_{output_len}.txt"
+            with open(bench_results_file, "w") as f:
+                    f.write(f"Request Rate: {rate}\n")
+                    f.write(f"Input length: {input_len}, Output length: {output_len}\n")
+                    subprocess.run([
+                        "vllm", "bench", "serve",
+                        "--base-url", "http://127.0.0.1:8000",
+                        "--dataset-name", "random",
+                        "--input-len", str(input_len),
+                        "--output-len", str(output_len),
+                        "--request-rate", str(rate),
+                        "--disable-tqdm",
+                    ], stdout=f, stderr=subprocess.STDOUT, text=True)
 
 
 def main():
