@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 
-request_rates = [1, 2, 4, 8, 16, 32]
+request_rates = [8, 16, 32]
 workload_profile = [(1800, 100), (100, 1800), (950, 950)]
 
 
