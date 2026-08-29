@@ -12,7 +12,7 @@ sleep 1
 MODEL_NAME=${HF_MODEL_NAME:-Qwen/Qwen2.5-1.5B-Instruct}
 
 # Trap the SIGINT signal (triggered by Ctrl+C)
-trap 'cleanup' INT
+trap 'cleanup' INT TERM
 
 # Cleanup function
 cleanup() {
@@ -98,6 +98,9 @@ echo "8200 is ready"
 echo "Launching the proxy server at port 8000..."
 python3 ./proxy.py &
 sleep 1
+
+
+echo "SERVERS_READY"
 
 # serve two example requests
 output1=$(curl -X POST -s http://localhost:8000/v1/completions \
