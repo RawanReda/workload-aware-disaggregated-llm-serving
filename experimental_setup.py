@@ -6,13 +6,12 @@ request_rates = [1, 2, 4, 8, 16, 32]
 workload_profile = [(1800, 100), (100, 1800), (950, 950)]
 
 
-gpu_split = sys.argv[1]
+sub_folder_path = sys.argv[1]
 
-gpu_split_folder = f"gpu_split_{gpu_split}"
-results_dir = f"results/{gpu_split_folder}"
+results_dir = f"results/{sub_folder_path}"
 os.makedirs(results_dir, exist_ok=True)
 
-print(f"Running benchmarks for GPU split: {gpu_split}")
+print(f"Running benchmarks for sub folder: {sub_folder_path}")
 
 def run_benchmarks():
     for rate in request_rates:

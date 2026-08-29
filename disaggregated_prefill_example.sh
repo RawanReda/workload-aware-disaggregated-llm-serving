@@ -8,8 +8,20 @@ set -xe
 echo "🚧🚧 Warning: The usage of disaggregated prefill is experimental and subject to change 🚧🚧"
 sleep 1
 
-# meta-llama/Meta-Llama-3.1-8B-Instruct or deepseek-ai/DeepSeek-V2-Lite
-MODEL_NAME=${HF_MODEL_NAME:-Qwen/Qwen2.5-1.5B-Instruct}
+
+PREFILL_GPUS=$1
+PREFILL_TP=$2
+PREFILL_PP=$3
+
+DECODE_GPUS=$4
+DECODE_TP=$5
+DECODE_PP=$6
+
+MODEL_NAME=${7:-Qwen/Qwen2.5-1.5B-Instruct}
+
+echo "Using PREFILL_GPUS=${PREFILL_GPUS}, PREFILL_TP=${PREFILL_TP}, PREFILL_PP=${PREFILL_PP}"
+echo "Using DECODE_GPUS=${DECODE_GPUS}, DECODE_TP=${DECODE_TP}, DECODE_PP=${DECODE_PP}"
+echo "Using MODEL_NAME=${MODEL_NAME}"
 
 # Trap the SIGINT signal (triggered by Ctrl+C)
 trap 'cleanup' INT TERM
@@ -66,7 +78,9 @@ vllm serve $MODEL_NAME \
     --host 0.0.0.0 \
     --port 8100 \
     --enforce-eager \
-    --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_producer","kv_load_failure_policy":"fail"}' &
+    --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_producer","kv_load_failure_policy":"fail"}' \
+    --tensor-parallel-size $PREFILL_TP \
+    --pipeline-parallel-size $PREFILL_PP &
 
 # decoding instance, which is the KV consumer  
 CUDA_VISIBLE_DEVICES=1 \
@@ -76,7 +90,9 @@ vllm serve $MODEL_NAME \
     --host 0.0.0.0 \
     --port 8200 \
     --enforce-eager \
-    --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_consumer","kv_load_failure_policy":"fail"}' &
+    --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_consumer","kv_load_failure_policy":"fail"}' \
+    --tensor-parallel-size $DECODE_TP \
+    --pipeline-parallel-size $DECODE_PP &
 
 # wait until prefill and decode instances are ready
 echo "Waiting for 8100..."
