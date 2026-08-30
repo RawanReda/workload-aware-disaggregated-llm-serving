@@ -1,19 +1,21 @@
+import os
+import signal
 import subprocess
-import yaml
-import torch
 import time
-import os 
-import signal 
+
+import torch
+import yaml
 
 with open("gpu_config.yaml", "r") as f:
     gpu_config = yaml.safe_load(f)
 
 gpu_count = torch.cuda.device_count()
+configs = gpu_config["gpu_configurations"].get(gpu_count)
 
-configs = gpu_config["gpu_configurations"][gpu_count]
+if configs is None:
+    raise ValueError(f"No GPU configuration found for {gpu_count} GPUs in gpu_config.yaml")
 
-models = ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-14B", "Qwen/Qwen2.5-32B", "Qwen/Qwen2.5-72B" ]
-
+models = ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-14B", "Qwen/Qwen2.5-32B", "Qwen/Qwen2.5-72B"]
 
 for model in models:
     print(f"Running experiments for model: {model}")
@@ -26,21 +28,31 @@ for model in models:
         print(f"Decode configuration: {decoder}")
 
         log_file = "run_script.txt"
+        process = None
 
-        try: 
-            process = subprocess.Popen( [ 
-                "./disaggregated_prefill_example.sh", 
-                ",".join(map(str, prefill["gpus"])), 
-                str(prefill["tp"]),
-                str(prefill["pp"]),
-                ",".join(map(str, decoder["gpus"])),
-                str(decoder["tp"]),
-                str(decoder["pp"]),
-                str(model)
+        try:
+            prefill_gpus = ",".join(map(str, prefill["gpus"]))
+            decoder_gpus = ",".join(map(str, decoder["gpus"]))
+
+            if not prefill_gpus or not decoder_gpus:
+                print("Warning: empty GPU list for prefill or decoder; skipping this configuration.")
+                continue
+
+            process = subprocess.Popen(
+                [
+                    "./disaggregated_prefill_example.sh",
+                    prefill_gpus,
+                    str(prefill["tp"]),
+                    str(prefill["pp"]),
+                    decoder_gpus,
+                    str(decoder["tp"]),
+                    str(decoder["pp"]),
+                    str(model),
                 ],
                 stdout=open(log_file, "w"),
                 stderr=subprocess.STDOUT,
-                start_new_session=True)
+                start_new_session=True,
+            )
 
             while True:
                 with open(log_file, "r") as f:
@@ -49,21 +61,35 @@ for model in models:
                     print("Servers are ready. Running experimental_setup.py...")
                     break
                 if process.poll() is not None:
-                    print("Process terminated unexpectedly. Check the log file for details.")
+                    print("Warning: process terminated unexpectedly before readiness. Check the log file for details.")
                     raise RuntimeError("Process terminated unexpectedly.")
                 time.sleep(1)
-        
-            gpu_split = f"p_{'_'.join(map(str, prefill['gpus']))}_d_{'_'.join(map(str, decoder['gpus']))}"
+
+            gpu_split_name = f"p_{'_'.join(map(str, prefill['gpus']))}_d_{'_'.join(map(str, decoder['gpus']))}"
             model_folder = model.split("/")[-1]
-            results_dir = f"{model_folder}/gpu_split_{gpu_split}"
-            subprocess.run(["python3", "experimental_setup.py", results_dir])
+            results_dir = f"{model_folder}/gpu_split_{gpu_split_name}"
+
+            subprocess.run(
+                [
+                    "python3",
+                    "experimental_setup.py",
+                    results_dir,
+                    prefill_gpus,
+                    decoder_gpus,
+                ],
+                check=True,
+            )
+
         except KeyboardInterrupt:
             print("Keyboard interrupt received.")
-        finally: 
-            print("Force killing process group...")
-            os.killpg(
-                os.getpgid(process.pid),
-                signal.SIGKILL
-            )
-            process.wait()
+        except Exception as exc:
+            print(f"Warning: benchmark run failed for model={model}, gpu_split={gpu_split}: {exc}")
+        finally:
+            if process is not None and process.poll() is None:
+                print("Force killing process group...")
+                try:
+                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                except ProcessLookupError:
+                    print("Warning: process group already exited; skipping kill.")
+                process.wait()
             print("Experiment cleanup complete")
