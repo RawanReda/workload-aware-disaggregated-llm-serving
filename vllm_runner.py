@@ -82,8 +82,10 @@ for model in models:
 
         except KeyboardInterrupt:
             print("Keyboard interrupt received.")
+            raise
         except Exception as exc:
             print(f"Warning: benchmark run failed for model={model}, gpu_split={gpu_split}: {exc}")
+            raise
         finally:
             if process is not None and process.poll() is None:
                 print("Force killing process group...")

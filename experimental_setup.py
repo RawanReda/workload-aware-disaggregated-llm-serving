@@ -6,13 +6,14 @@ import pandas as pd
 
 from gpu_monitor import GPUMonitor
 
-request_rates = [8, 16, 32]
+request_rates = [32]
 workload_profile = [(1800, 100), (100, 1800), (950, 950)]
 
 sub_folder_path = sys.argv[1]
-prefill_gpus = sys.argv[2].split(",")
-decoder_gpus = sys.argv[3].split(",")
 
+prefill_gpu_ids = list(map(int, sys.argv[2].split(",")))
+decoder_gpu_ids = list(map(int, sys.argv[3].split(",")))
+                
 
 results_dir = f"results/{sub_folder_path}"
 os.makedirs(results_dir, exist_ok=True)
@@ -49,8 +50,8 @@ def summarise_gpu_measurements(measurements):
             "memory_used": _summarise_series(group["memory_used"]),
         }
 
-    prefill_indices = df[df["gpu_index"].isin([int(gpu) for gpu in prefill_gpus])]
-    decoder_indices = df[df["gpu_index"].isin([int(gpu) for gpu in decoder_gpus])]
+    prefill_indices = df[df["gpu_index"].isin([int(gpu) for gpu in prefill_gpu_ids])]
+    decoder_indices = df[df["gpu_index"].isin([int(gpu) for gpu in decoder_gpu_ids])]
 
     prefill_summary = {
         "gpu_utilization": _summarise_series(prefill_indices["gpu_utilization"]),
@@ -63,6 +64,18 @@ def summarise_gpu_measurements(measurements):
     }
 
     return summary_by_gpu, prefill_summary, decoder_summary
+
+def write_gpu_summary(f, title, summary):
+    util = summary["gpu_utilization"]
+
+    f.write(f"{title}\n")
+    f.write("-" * 63 + "\n")
+    f.write(f"  Mean:   {util['mean']:.2f}%\n")
+    f.write(f"  Median: {util['median']:.2f}%\n")
+    f.write(f"  P90:    {util['p90']:.2f}%\n")
+    f.write(f"  P95:    {util['p95']:.2f}%\n")
+    f.write(f"  P99:    {util['p99']:.2f}%\n")
+    f.write(f"  Max:    {util['max']:.2f}%\n")
 
 def run_benchmarks():
     for rate in request_rates:
@@ -84,17 +97,53 @@ def run_benchmarks():
                     "--disable-tqdm",
                 ], stdout=f, stderr=subprocess.STDOUT, text=True)
 
-                f.write("===============================================================\n")
                 gpu_measurements = monitor.stop()
                 gpu_summary = summarise_gpu_measurements(gpu_measurements)
 
-                f.write("\nGPU Measurements by GPU:\n")
-                for gpu_index, summary in gpu_summary[0].items():
-                    f.write(f"GPU {gpu_index} Summary: \n {summary}\n")
+                f.write("\n")
+                f.write("=" * 63 + "\n")
+                f.write("GPU Utilisation Summary\n")
+                f.write("=" * 63 + "\n\n")
 
-                f.write("\nGPU Summary:\n")
-                f.write(f"Prefill Summary: \n {gpu_summary[1]}\n")
-                f.write(f"Decoder Summary: \n {gpu_summary[2]}\n")
+                # Individual GPUs
+                f.write("Individual GPUs\n")
+                f.write("-" * 63 + "\n")
+
+                for gpu_index, summary in gpu_summary[0].items():
+                    # Determine whether this GPU is prefill or decode
+                    if gpu_index in prefill_gpu_ids:
+                        stage = "Prefill"
+                    elif gpu_index in decoder_gpu_ids:
+                        stage = "Decode"
+                    else:
+                        stage = "Unknown"
+
+                    write_gpu_summary(
+                        f,
+                        f"GPU {gpu_index} ({stage})",
+                        summary
+                    )
+                    f.write("\n")
+
+
+                # Aggregated prefill GPUs
+                write_gpu_summary(
+                    f,
+                    f"Prefill GPUs ({', '.join(map(str, prefill_gpu_ids))})",
+                    gpu_summary[1]
+                )
+                f.write("\n")
+
+
+                # Aggregated decode GPUs
+                write_gpu_summary(
+                    f,
+                    f"Decode GPUs ({', '.join(map(str, decoder_gpu_ids))})",
+                    gpu_summary[2]
+                )
+
+                f.write("=" * 63 + "\n")
+
 
 def main():
     run_benchmarks()

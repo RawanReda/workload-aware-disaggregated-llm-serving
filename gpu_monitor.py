@@ -17,7 +17,7 @@ class GPUMonitor:
         result = subprocess.run(
             [
                 "nvidia-smi",
-                "--query-gpu=index, utilization.gpu, memory.used, memory.total",
+                "--query-gpu=index,utilization.gpu,memory.used,memory.total",
                 "--format=csv,noheader,nounits",
             ],
             stdout=subprocess.PIPE,
@@ -30,7 +30,7 @@ class GPUMonitor:
             writer = csv.writer(f)
 
             for line in result.stdout.strip().splitlines():
-                gpu_index, gpu_utilization, memory_used, memory_total = map(int, line.split(", "))
+                gpu_index, gpu_utilization, memory_used, memory_total = map(int, line.split(","))
                 timestamp = time.time()
 
                 measurement = {
