@@ -63,6 +63,9 @@ for model in models:
                 if process.poll() is not None:
                     print("Warning: process terminated unexpectedly before readiness. Check the log file for details.")
                     raise RuntimeError("Process terminated unexpectedly.")
+                if "Address already in use" in log_contents:
+                    print("ERROR: Address already in use. Stopping experiment.")
+                    raise RuntimeError("Address already in use")
                 time.sleep(1)
 
             gpu_split_name = f"p_{'_'.join(map(str, prefill['gpus']))}_d_{'_'.join(map(str, decoder['gpus']))}"

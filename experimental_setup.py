@@ -6,7 +6,7 @@ import pandas as pd
 
 from gpu_monitor import GPUMonitor
 
-request_rates = [32]
+request_rates = [8, 32]
 workload_profile = [(1800, 100), (100, 1800), (950, 950)]
 
 sub_folder_path = sys.argv[1]
@@ -17,6 +17,9 @@ decoder_gpu_ids = list(map(int, sys.argv[3].split(",")))
 
 results_dir = f"results/{sub_folder_path}"
 os.makedirs(results_dir, exist_ok=True)
+os.makedirs(results_dir, exist_ok=True)
+os.makedirs(f"{results_dir}/vllm_bench_serve", exist_ok=True)
+os.makedirs(f"{results_dir}/gpu_monitoring_csv", exist_ok=True)
 
 print(f"Running benchmarks for sub folder: {sub_folder_path}")
 
@@ -42,6 +45,13 @@ def summarise_gpu_measurements(measurements):
 
     if df.empty:
         return {}, empty_summary, empty_summary
+
+    # Find first sample where GPU activity begins
+    active_samples = df[df["gpu_utilization"] > 0]
+
+    benchmark_start = active_samples["timestamp"].min()
+
+    df = df[df["timestamp"] >= benchmark_start]
 
     summary_by_gpu = {}
     for gpu_index, group in df.groupby("gpu_index"):
@@ -80,8 +90,8 @@ def write_gpu_summary(f, title, summary):
 def run_benchmarks():
     for rate in request_rates:
         for input_len, output_len in workload_profile:
-            bench_results_file = f"{results_dir}/rate_{rate}_input_{input_len}_output_{output_len}.txt"
-            csv_file = f"{results_dir}/rate_{rate}_input_{input_len}_output_{output_len}.csv"
+            bench_results_file = f"{results_dir}/vllm_bench_serve/rate_{rate}_input_{input_len}_output_{output_len}.txt"
+            csv_file = f"{results_dir}/gpu_monitoring_csv/rate_{rate}_input_{input_len}_output_{output_len}.csv"
             monitor.start(csv_file)
 
             with open(bench_results_file, "w") as f:
