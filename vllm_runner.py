@@ -58,7 +58,7 @@ for model in models:
                 with open(log_file, "r") as f:
                     log_contents = f.read()
                 if "SERVERS_READY" in log_contents:
-                    print("Servers are ready. Running experimental_setup.py...")
+                    print("Servers are ready. Running run_benchmarks.py...")
                     break
                 if process.poll() is not None:
                     print("Warning: process terminated unexpectedly before readiness. Check the log file for details.")
@@ -75,7 +75,7 @@ for model in models:
             subprocess.run(
                 [
                     "python3",
-                    "experimental_setup.py",
+                    "run_benchmarks.py",
                     results_dir,
                     prefill_gpus,
                     decoder_gpus,

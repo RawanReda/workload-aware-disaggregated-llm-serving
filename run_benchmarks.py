@@ -4,7 +4,7 @@ import sys
 
 import pandas as pd
 
-from gpu_monitor import GPUMonitor
+from gpu_metrics_monitor import GPUMonitor
 
 request_rates = [8, 32]
 workload_profile = [(1800, 100), (100, 1800), (950, 950)]
@@ -87,72 +87,95 @@ def write_gpu_summary(f, title, summary):
     f.write(f"  P99:    {util['p99']:.2f}%\n")
     f.write(f"  Max:    {util['max']:.2f}%\n")
 
+def write_gpu_measurements_summary(f, gpu_measurements):
+    """Process and write GPU utilization summary to file."""
+    gpu_summary = summarise_gpu_measurements(gpu_measurements)
+
+    f.write("\n")
+    f.write("=" * 63 + "\n")
+    f.write("GPU Utilisation Summary\n")
+    f.write("=" * 63 + "\n\n")
+
+    # Individual GPUs
+    f.write("Individual GPUs\n")
+    f.write("-" * 63 + "\n")
+
+    for gpu_index, summary in gpu_summary[0].items():
+        # Determine whether this GPU is prefill or decode
+        if gpu_index in prefill_gpu_ids:
+            stage = "Prefill"
+        elif gpu_index in decoder_gpu_ids:
+            stage = "Decode"
+        else:
+            stage = "Unknown"
+
+        write_gpu_summary(
+            f,
+            f"GPU {gpu_index} ({stage})",
+            summary
+        )
+        f.write("\n")
+
+    # Aggregated prefill GPUs
+    write_gpu_summary(
+        f,
+        f"Prefill GPUs ({', '.join(map(str, prefill_gpu_ids))})",
+        gpu_summary[1]
+    )
+    f.write("\n")
+
+    # Aggregated decode GPUs
+    write_gpu_summary(
+        f,
+        f"Decode GPUs ({', '.join(map(str, decoder_gpu_ids))})",
+        gpu_summary[2]
+    )
+
+    f.write("=" * 63 + "\n")
+
+
+def run_single_benchmark(rate, input_len, output_len, filename):
+    """Run a single vllm benchmark and collect GPU metrics."""
+    bench_results_file = f"{results_dir}/vllm_bench_serve/{filename}.txt"
+    csv_file = f"{results_dir}/gpu_monitoring_csv/{filename}.csv"
+
+    with open(bench_results_file, "w") as f:
+        f.write(f"Request Rate: {rate}\n")
+        f.write(f"Input length: {input_len}, Output length: {output_len}\n")
+        
+        process = subprocess.Popen([
+            "vllm", "bench", "serve",
+            "--base-url", "http://127.0.0.1:8000",
+            "--dataset-name", "random",
+            "--input-len", str(input_len),
+            "--output-len", str(output_len),
+            "--request-rate", str(rate),
+            "--num-warmups", "200",
+            "--plot-dataset_stats",
+            "--plot-timeline",
+            "--result-dir", f"{results_dir}/vllm_bench_serve",
+            "--result-filename", filename,
+            "--disable-tqdm",
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+        for line in process.stdout:
+            f.write(line)
+            if "Starting main benchmark run" in line:
+                monitor.start(csv_file)
+
+        process.wait()
+        gpu_measurements = monitor.stop()
+        
+        return f, gpu_measurements
+
+
 def run_benchmarks():
     for rate in request_rates:
         for input_len, output_len in workload_profile:
-            bench_results_file = f"{results_dir}/vllm_bench_serve/rate_{rate}_input_{input_len}_output_{output_len}.txt"
-            csv_file = f"{results_dir}/gpu_monitoring_csv/rate_{rate}_input_{input_len}_output_{output_len}.csv"
-            monitor.start(csv_file)
-
-            with open(bench_results_file, "w") as f:
-                f.write(f"Request Rate: {rate}\n")
-                f.write(f"Input length: {input_len}, Output length: {output_len}\n")
-                subprocess.run([
-                    "vllm", "bench", "serve",
-                    "--base-url", "http://127.0.0.1:8000",
-                    "--dataset-name", "random",
-                    "--input-len", str(input_len),
-                    "--output-len", str(output_len),
-                    "--request-rate", str(rate),
-                    "--disable-tqdm",
-                ], stdout=f, stderr=subprocess.STDOUT, text=True)
-
-                gpu_measurements = monitor.stop()
-                gpu_summary = summarise_gpu_measurements(gpu_measurements)
-
-                f.write("\n")
-                f.write("=" * 63 + "\n")
-                f.write("GPU Utilisation Summary\n")
-                f.write("=" * 63 + "\n\n")
-
-                # Individual GPUs
-                f.write("Individual GPUs\n")
-                f.write("-" * 63 + "\n")
-
-                for gpu_index, summary in gpu_summary[0].items():
-                    # Determine whether this GPU is prefill or decode
-                    if gpu_index in prefill_gpu_ids:
-                        stage = "Prefill"
-                    elif gpu_index in decoder_gpu_ids:
-                        stage = "Decode"
-                    else:
-                        stage = "Unknown"
-
-                    write_gpu_summary(
-                        f,
-                        f"GPU {gpu_index} ({stage})",
-                        summary
-                    )
-                    f.write("\n")
-
-
-                # Aggregated prefill GPUs
-                write_gpu_summary(
-                    f,
-                    f"Prefill GPUs ({', '.join(map(str, prefill_gpu_ids))})",
-                    gpu_summary[1]
-                )
-                f.write("\n")
-
-
-                # Aggregated decode GPUs
-                write_gpu_summary(
-                    f,
-                    f"Decode GPUs ({', '.join(map(str, decoder_gpu_ids))})",
-                    gpu_summary[2]
-                )
-
-                f.write("=" * 63 + "\n")
+            filename = f"rate_{rate}_input_{input_len}_output_{output_len}"
+            
+            f, gpu_measurements = run_single_benchmark(rate, input_len, output_len, filename)
+            write_gpu_measurements_summary(f, gpu_measurements)
 
 
 def main():
