@@ -151,7 +151,6 @@ def run_single_benchmark(rate, input_len, output_len, filename):
             "--output-len", str(output_len),
             "--request-rate", str(rate),
             "--num-warmups", "200",
-            "--plot-dataset_stats",
             "--plot-timeline",
             "--result-dir", f"{results_dir}/vllm_bench_serve",
             "--result-filename", filename,
@@ -165,8 +164,9 @@ def run_single_benchmark(rate, input_len, output_len, filename):
 
         process.wait()
         gpu_measurements = monitor.stop()
+        write_gpu_measurements_summary(f, gpu_measurements)
         
-        return f, gpu_measurements
+        return f
 
 
 def run_benchmarks():
@@ -175,7 +175,6 @@ def run_benchmarks():
             filename = f"rate_{rate}_input_{input_len}_output_{output_len}"
             
             f, gpu_measurements = run_single_benchmark(rate, input_len, output_len, filename)
-            write_gpu_measurements_summary(f, gpu_measurements)
 
 
 def main():
