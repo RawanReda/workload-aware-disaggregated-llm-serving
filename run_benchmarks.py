@@ -153,6 +153,7 @@ def run_single_benchmark(rate, input_len, output_len, filename):
             "--num-warmups", "200",
             "--plot-timeline",
             "--save-detailed",
+            "--save-result",
             "--result-dir", f"{results_dir}/vllm_bench_serve",
             "--result-filename", filename,
             "--disable-tqdm",
