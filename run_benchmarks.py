@@ -6,8 +6,8 @@ import pandas as pd
 
 from gpu_metrics_monitor import GPUMonitor
 
-request_rates = [8, 32]
-workload_profile = [(1800, 100), (100, 1800), (950, 950)]
+request_rates = [32]
+workload_profile = [(1800, 100)]
 
 sub_folder_path = sys.argv[1]
 
@@ -152,6 +152,7 @@ def run_single_benchmark(rate, input_len, output_len, filename):
             "--request-rate", str(rate),
             "--num-warmups", "200",
             "--plot-timeline",
+            "--save-detailed",
             "--result-dir", f"{results_dir}/vllm_bench_serve",
             "--result-filename", filename,
             "--disable-tqdm",
@@ -162,7 +163,8 @@ def run_single_benchmark(rate, input_len, output_len, filename):
             if "Starting main benchmark run" in line:
                 monitor.start(csv_file)
 
-        process.wait()
+        return_code = process.wait()
+        print(f"vLLM benchmark exited with code: {return_code}")
         gpu_measurements = monitor.stop()
         write_gpu_measurements_summary(f, gpu_measurements)
         
@@ -174,7 +176,7 @@ def run_benchmarks():
         for input_len, output_len in workload_profile:
             filename = f"rate_{rate}_input_{input_len}_output_{output_len}"
             
-            f, gpu_measurements = run_single_benchmark(rate, input_len, output_len, filename)
+            f = run_single_benchmark(rate, input_len, output_len, filename)
 
 
 def main():

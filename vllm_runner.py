@@ -15,6 +15,30 @@ configs = gpu_config["gpu_configurations"].get(gpu_count)
 if configs is None:
     raise ValueError(f"No GPU configuration found for {gpu_count} GPUs in gpu_config.yaml")
 
+
+def cleanup_ports(ports):
+    for port in ports:
+        result = subprocess.run(
+            ["bash", "-c", f"fuser {port}/tcp 2>/dev/null || true"],
+            capture_output=True,
+            text=True,
+        )
+
+        pids = result.stdout.split()
+
+        if pids:
+            print(f"Port {port} is being used by PIDs: {pids}")
+
+            for pid in pids:
+                try:
+                    os.kill(int(pid), signal.SIGKILL)
+                    print(f"Killed PID {pid}")
+                except ProcessLookupError:
+                    pass
+        else:
+            print(f"Port {port} is free")
+
+
 models = ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-14B", "Qwen/Qwen2.5-32B", "Qwen/Qwen2.5-72B"]
 
 for model in models:
@@ -57,15 +81,15 @@ for model in models:
             while True:
                 with open(log_file, "r") as f:
                     log_contents = f.read()
-                if "SERVERS_READY" in log_contents:
-                    print("Servers are ready. Running run_benchmarks.py...")
-                    break
-                if process.poll() is not None:
-                    print("Warning: process terminated unexpectedly before readiness. Check the log file for details.")
-                    raise RuntimeError("Process terminated unexpectedly.")
-                if "Address already in use" in log_contents:
-                    print("ERROR: Address already in use. Stopping experiment.")
-                    raise RuntimeError("Address already in use")
+                    if "address already in use" in log_contents.lower():
+                        print("ERROR: Address already in use. Stopping experiment.")
+                        raise RuntimeError("Address already in use")
+                    if "SERVERS_READY" in log_contents:
+                        print("Servers are ready. Running run_benchmarks.py...")
+                        break
+                    if process.poll() is not None:
+                        print("Warning: process terminated unexpectedly before readiness. Check the log file for details.")
+                        raise RuntimeError("Process terminated unexpectedly.")
                 time.sleep(1)
 
             gpu_split_name = f"p_{'_'.join(map(str, prefill['gpus']))}_d_{'_'.join(map(str, decoder['gpus']))}"
@@ -90,11 +114,18 @@ for model in models:
             print(f"Warning: benchmark run failed for model={model}, gpu_split={gpu_split}: {exc}")
             raise
         finally:
-            if process is not None and process.poll() is None:
-                print("Force killing process group...")
+            if process is not None:
                 try:
-                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                    pgid = os.getpgid(process.pid)
+                    print(f"Killing process group {pgid}")
+                    os.killpg(pgid, signal.SIGKILL)
                 except ProcessLookupError:
-                    print("Warning: process group already exited; skipping kill.")
+                    print("Process group already exited.")
+
                 process.wait()
+
+            # Clean up orphans
+            cleanup_ports([8000, 8100, 8200])
             print("Experiment cleanup complete")
+            
+            
