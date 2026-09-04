@@ -10,6 +10,7 @@ with open("gpu_config.yaml", "r") as f:
     gpu_config = yaml.safe_load(f)
 
 gpu_count = torch.cuda.device_count()
+models = ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-14B", "Qwen/Qwen2.5-32B", "Qwen/Qwen2.5-72B"]
 configs = gpu_config["gpu_configurations"].get(gpu_count)
 
 if configs is None:
@@ -70,7 +71,6 @@ def cleanup_ports(ports):
             print(f"Port {port} is free")
 
 
-models = ["Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-14B", "Qwen/Qwen2.5-32B", "Qwen/Qwen2.5-72B"]
 
 for model in models:
     print(f"Running experiments for model: {model}")

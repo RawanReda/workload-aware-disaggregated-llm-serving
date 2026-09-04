@@ -49,7 +49,7 @@ gpu_configurations:
           tp: 3
           pp: 1
 
-  8:
+    8:
       more_prefill:
         prefill:
           gpus: [0,1,2,3,4,5]
@@ -83,8 +83,9 @@ gpu_configurations:
       more_decode:
         prefill:
           gpus: [0,1]
-          tp: 2
-          pp: 1
+          pp-heavy:
+            tp: 2
+            pp: 1
         decode:
           gpus: [2,3,4,5,6,7]
           pp_heavy:

@@ -156,11 +156,10 @@ def run_single_benchmark(rate, input_len, output_len, filename):
             "--output-len", str(output_len),
             "--request-rate", str(rate),
             "--num-warmups", "200",
-            "--plot-timeline",
             "--save-detailed",
             "--save-result",
             "--result-dir", f"{results_dir}/vllm_bench_serve",
-            "--result-filename", filename,
+            "--result-filename", f"{filename}.json",
             "--disable-tqdm",
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
