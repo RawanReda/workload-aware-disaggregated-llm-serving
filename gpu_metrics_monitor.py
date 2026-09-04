@@ -31,8 +31,8 @@ class GPUMonitor:
 
             for line in result.stdout.strip().splitlines():
                 gpu_index, gpu_utilization, memory_used, memory_total = map(int, line.split(","))
-                # Prometheus expects timestamp in milliseconds
-                timestamp = int(time.time() * 1000)
+                # Grafana can use Unix epoch timestamps in seconds.
+                timestamp = time.time()
 
                 measurement = {
                     "timestamp": timestamp,
