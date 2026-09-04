@@ -17,7 +17,6 @@ decoder_gpu_ids = list(map(int, sys.argv[3].split(",")))
 
 results_dir = f"results/{sub_folder_path}"
 os.makedirs(results_dir, exist_ok=True)
-os.makedirs(results_dir, exist_ok=True)
 os.makedirs(f"{results_dir}/vllm_bench_serve", exist_ok=True)
 os.makedirs(f"{results_dir}/gpu_monitoring_csv", exist_ok=True)
 
@@ -41,7 +40,10 @@ def _summarise_series(series):
 
 def summarise_gpu_measurements(measurements):
     df = pd.DataFrame(measurements)
-    empty_summary = {"gpu_utilization": {}, "memory_used": {}}
+    empty_summary = {
+        "gpu_utilization": _summarise_series(pd.Series(dtype=float)),
+        "memory_used": _summarise_series(pd.Series(dtype=float)),
+    }
 
     if df.empty:
         return {}, empty_summary, empty_summary
@@ -49,7 +51,10 @@ def summarise_gpu_measurements(measurements):
     # Find first sample where GPU activity begins
     active_samples = df[df["gpu_utilization"] > 0]
 
-    benchmark_start = active_samples["timestamp"].min()
+    if active_samples.empty:
+        benchmark_start = df["timestamp"].min()
+    else:
+        benchmark_start = active_samples["timestamp"].min()
 
     df = df[df["timestamp"] >= benchmark_start]
 

@@ -2,7 +2,7 @@ import argparse
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 import uvicorn
 
@@ -56,7 +56,7 @@ async def get_models():
         prefill_models_response.raise_for_status()
         return prefill_models_response.json()
     except Exception as e:
-        return {"error": f"Failed to fetch models from prefill service: {str(e)}"}
+        raise HTTPException(status_code=502, detail=f"Failed to fetch models from prefill service: {e}") from e
    
 
 @app.post("/v1/completions")
@@ -87,7 +87,7 @@ async def create_completions(request: Request):
         )
 
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=502, detail=str(e)) from e
 
 
 

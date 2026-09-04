@@ -18,9 +18,12 @@ DECODE_TP=$5
 DECODE_PP=$6
 
 MODEL_NAME=${7:-Qwen/Qwen2.5-1.5B-Instruct}
+PREFILL_PORT=${8:-8100}
+DECODE_PORT=${9:-8200}
 
 echo "Using PREFILL_GPUS=${PREFILL_GPUS}, PREFILL_TP=${PREFILL_TP}, PREFILL_PP=${PREFILL_PP}"
 echo "Using DECODE_GPUS=${DECODE_GPUS}, DECODE_TP=${DECODE_TP}, DECODE_PP=${DECODE_PP}"
+echo "Using PREFILL_PORT=${PREFILL_PORT}, DECODE_PORT=${DECODE_PORT}"
 echo "Using MODEL_NAME=${MODEL_NAME}"
 
 # Trap the SIGINT signal (triggered by Ctrl+C)
@@ -71,48 +74,51 @@ export UCX_NET_DEVICES=all  # or specify network devices like "mlx5_0:1,mlx5_1:1
 # You can also adjust --kv-ip and --kv-port for distributed inference.
 
 # prefilling instance, which is the KV producer
-CUDA_VISIBLE_DEVICES=0 \
+CUDA_VISIBLE_DEVICES=$PREFILL_GPUS \
 UCX_NET_DEVICES=all \
 VLLM_NIXL_SIDE_CHANNEL_PORT=5600 \
 vllm serve $MODEL_NAME \
     --host 0.0.0.0 \
-    --port 8100 \
+    --port $PREFILL_PORT \
     --enforce-eager \
     --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_producer","kv_load_failure_policy":"fail"}' \
     --tensor-parallel-size $PREFILL_TP \
     --pipeline-parallel-size $PREFILL_PP &
 
 # decoding instance, which is the KV consumer  
-CUDA_VISIBLE_DEVICES=1 \
+CUDA_VISIBLE_DEVICES=$DECODE_GPUS \
 UCX_NET_DEVICES=all \
 VLLM_NIXL_SIDE_CHANNEL_PORT=5601 \
 vllm serve $MODEL_NAME \
     --host 0.0.0.0 \
-    --port 8200 \
+    --port $DECODE_PORT \
     --enforce-eager \
     --kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_consumer","kv_load_failure_policy":"fail"}' \
     --tensor-parallel-size $DECODE_TP \
     --pipeline-parallel-size $DECODE_PP &
 
 # wait until prefill and decode instances are ready
-echo "Waiting for 8100..."
-wait_for_server 8100
-echo "8100 is ready"
+echo "Waiting for ${PREFILL_PORT}..."
+wait_for_server $PREFILL_PORT
+echo "${PREFILL_PORT} is ready"
 
-echo "Waiting for 8200..."
-wait_for_server 8200
-echo "8200 is ready"
+echo "Waiting for ${DECODE_PORT}..."
+wait_for_server $DECODE_PORT
+echo "${DECODE_PORT} is ready"
 
 # launch a proxy server that opens the service at port 8000
 # the workflow of this proxy:
-# - send the request to prefill vLLM instance (port 8100), change max_tokens 
+# - send the request to prefill vLLM instance, change max_tokens
 #   to 1
 # - after the prefill vLLM finishes prefill, send the request to decode vLLM 
 #   instance
 # NOTE: the usage of this API is subject to change --- in the future we will 
 # introduce "vllm connect" to connect between prefill and decode instances
 echo "Launching the proxy server at port 8000..."
-python3 ./proxy.py &
+python3 ./proxy.py \
+    --prefiller-port $PREFILL_PORT \
+    --decoder-port $DECODE_PORT \
+    --model-name "$MODEL_NAME" &
 sleep 1
 
 

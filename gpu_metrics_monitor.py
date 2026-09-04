@@ -12,6 +12,7 @@ class GPUMonitor:
         self.measurements = []
         self.stop_event = threading.Event()
         self.thread = None
+        self.error = None
 
     def query_gpu(self):
         result = subprocess.run(
@@ -46,11 +47,17 @@ class GPUMonitor:
 
     def _monitor(self):
         while not self.stop_event.is_set():
-            self.query_gpu()
+            try:
+                self.query_gpu()
+            except Exception as exc:
+                self.error = exc
+                self.stop_event.set()
+                break
             self.stop_event.wait(self.interval)
 
     def start(self, csv_file=None):
         self.measurements = []
+        self.error = None
         self.stop_event.clear()
 
         if csv_file is not None:
@@ -68,4 +75,6 @@ class GPUMonitor:
         if self.thread is not None:
             self.stop_event.set()
             self.thread.join()
+        if self.error is not None:
+            raise RuntimeError("GPU monitoring failed") from self.error
         return self.measurements
