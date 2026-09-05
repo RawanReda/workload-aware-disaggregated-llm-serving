@@ -1,0 +1,376 @@
+Request Rate: 32
+Input length: 950, Output length: 950
+Namespace(subparser='bench', bench_type='serve', dispatch_function=<function BenchmarkServingSubcommand.cmd at 0x7f89fd2cbba0>, trust_remote_code=False, seed=0, num_prompts=1000, dataset_name='random', no_stream=False, dataset_path=None, no_oversample=False, skip_chat_template=False, enable_multimodal_chat=False, disable_shuffle=False, custom_output_len=256, custom_ensure_client_side_data=False, spec_bench_output_len=256, spec_bench_category=None, sonnet_input_len=550, sonnet_output_len=150, sonnet_prefix_len=200, sharegpt_output_len=None, timed_trace_chunk_hash_size=16, timed_trace_sec_multiplier=1, timed_trace_label_timestamp='timestamp', timed_trace_label_input_length='input_length', timed_trace_label_output_length='output_length', timed_trace_label_hash_ids='hash_ids', blazedit_min_distance=0.0, blazedit_max_distance=1.0, asr_max_audio_len_sec=inf, asr_min_audio_len_sec=0.0, random_input_len=1024, random_output_len=128, random_range_ratio='0.0', random_prefix_len=0, random_batch_size=1, no_reranker=False, random_mm_base_items_per_request=1, random_mm_num_mm_items_range_ratio=0.0, random_mm_limit_mm_per_prompt={'image': 255, 'video': 1}, random_mm_bucket_config={(256, 256, 1): 0.5, (720, 1280, 1): 0.5, (720, 1280, 16): 0.0}, hf_subset=None, hf_split=None, hf_name=None, hf_output_len=None, bfcl_categories=None, prefix_repetition_prefix_len=256, prefix_repetition_suffix_len=256, prefix_repetition_num_prefixes=10, prefix_repetition_output_len=128, speed_bench_dataset_subset='qualitative', speed_bench_output_len=4096, speed_bench_category=None, label=None, backend='openai', base_url='http://127.0.0.1:8000', host='127.0.0.1', port=8000, endpoint='/v1/completions', header=None, max_concurrency=None, model=None, input_len=950, output_len=950, tokenizer=None, tokenizer_mode='auto', use_beam_search=False, logprobs=None, request_rate=32.0, burstiness=1.0, probe_request_rate=0.0, disable_tqdm=True, num_warmups=200, profile=False, save_result=True, save_detailed=True, append_result=False, metadata=None, result_dir='results/Qwen2.5-32B/gpu_split_p_0_1_d_2_3_gpu_split_equal_prefill_tp2_pp1_decode_tp2_pp1/vllm_bench_serve', result_filename='rate_32_input_950_output_950.json', ignore_eos=False, self_timed=None, percentile_metrics=None, metric_percentiles='99', goodput=None, request_id_prefix='bench-7fbf465b-', top_p=None, top_k=None, min_p=None, temperature=None, frequency_penalty=None, presence_penalty=None, repetition_penalty=None, served_model_name=None, lora_modules=None, lora_assignment='random', ramp_up_strategy=None, ramp_up_start_rps=None, ramp_up_end_rps=None, ready_check_timeout_sec=0, chat_template_kwargs=None, extra_body=None, skip_tokenizer_init=False, insecure=False, plot_timeline=False, timeline_itl_thresholds='25,50', plot_dataset_stats=False)
+Model not specified, fetching first model from server...
+First model name: Qwen/Qwen2.5-32B, first model id: Qwen/Qwen2.5-32B
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO 09-05 18:29:07 [utils.py:90] Sampling input_len from [950, 950] and output_len from [950, 950]
+WARNING: /tokenize unavailable, skipping alignment.
+WARNING: vllm bench serve no longer sets temperature==0 (greedy) in requests by default. The default will be determined on the server side and can be model/API specific. For the old behavior, include --temperature=0.
+Starting initial single prompt test run...
+Skipping endpoint ready check.
+Warming up with 200 requests...
+Warmup run completed.
+Starting main benchmark run...
+Traffic request rate: 32.0
+Burstiness factor: 1.0 (Poisson process)
+Maximum request concurrency: None
+Failed requests during benchmark run detected (capping to 10):
+Error 0: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 1: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 2: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 3: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 4: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 5: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 6: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 7: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 8: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+Error 9: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 201, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload, headers=headers) as response:
+               ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 1693, in __aenter__
+    self._resp: _RetType_co = await self._coro
+                              ^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 858, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 836, in _connect_and_send_request
+    await resp.start(conn)
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_reqrep.py", line 558, in start
+    message, payload = await protocol.read()  # type: ignore[union-attr]
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 705, in read
+    await self._waiter
+aiohttp.client_exceptions.ServerDisconnectedError: Server disconnected
+
+
+                              Output tokens per second
+  10000 +-------------------------------------------------------------------+
+        |                                              *                    |
+   9000 |                                              ***                  |
+        |                                              ******               |
+   8000 |                                              *   ****             |
+        |                                              *     ****           |
+   7000 |                     *                        *        **          |
+        |                     *   *                    *        **          |
+   6000 |                     **  *  *  **             *         *          |
+   5000 |                   **** **  *****             *         *          |
+        |                 *********  *****             *         *          |
+   4000 |                ****************** *        * *         *          |
+        |         *     **** ********** *****  * * * ***         *          |
+   3000 |         ** *******   ******** *****  ***** ***         *          |
+        |         **********   ** ****    *************          *          |
+   2000 |         ******  *    *   *      ******* * ***          *          |
+        |       **** *                    ** ***  * *            *          |
+   1000 |** *****                         ** *                   *          |
+        |*****                                                   *          |
+      0 +-------------------------------------------------------------------+
+        0          50         100        150        200         250        300
+
+                          Concurrent requests per second
+  1000 +--------------------------------------------------------------------+
+       |      *                           **                                |
+   900 |     *                              **                              |
+       |     *                                **                            |
+   800 |     *                                 ***                          |
+       |    *                                    ***                        |
+   700 |    *                                      ***                      |
+       |   **                                        **                     |
+   600 |   *                                           *                    |
+   500 |  **                                           ***                  |
+       |  *                                              ****               |
+   400 |  *                                                 **              |
+       | **                                                   *             |
+   300 | *                                                     *            |
+       | *                                                      *           |
+   200 |*                                                        *          |
+       |*                                                        *          |
+   100 |*                                                        *          |
+       |                                                         *          |
+     0 +--------------------------------------------------------------------+
+       0           50        100         150        200         250        300
+============ Serving Benchmark Result ============
+Successful requests:                     990       
+Failed requests:                         10        
+Request rate configured (RPS):           32.00     
+Benchmark duration (s):                  253.07    
+Total input tokens:                      940500    
+Total generated tokens:                  940500    
+Request throughput (req/s):              3.91      
+Output token throughput (tok/s):         3716.39   
+Peak output token throughput (tok/s):    9226.00   
+Peak concurrent requests:                990.00    
+Total token throughput (tok/s):          7432.77   
+---------------Time to First Token----------------
+Mean TTFT (ms):                          44073.51  
+Median TTFT (ms):                        13229.84  
+P99 TTFT (ms):                           175129.38 
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          163.12    
+Median TPOT (ms):                        183.86    
+P99 TPOT (ms):                           215.62    
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           163.12    
+Median ITL (ms):                         64.69     
+P99 ITL (ms):                            517.46    
+==================================================
+
+===============================================================
+GPU Utilisation Summary
+===============================================================
+
+Individual GPUs
+---------------------------------------------------------------
+GPU 0 (Prefill)
+---------------------------------------------------------------
+  Mean:   20.29%
+  Median: 0.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+GPU 1 (Prefill)
+---------------------------------------------------------------
+  Mean:   20.27%
+  Median: 0.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+GPU 2 (Decode)
+---------------------------------------------------------------
+  Mean:   93.23%
+  Median: 100.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+GPU 3 (Decode)
+---------------------------------------------------------------
+  Mean:   92.04%
+  Median: 100.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+Prefill GPUs (0, 1)
+---------------------------------------------------------------
+  Mean:   20.28%
+  Median: 0.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+Decode GPUs (2, 3)
+---------------------------------------------------------------
+  Mean:   92.64%
+  Median: 100.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+===============================================================

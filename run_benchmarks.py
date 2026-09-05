@@ -6,8 +6,8 @@ import pandas as pd
 
 from gpu_metrics_monitor import GPUMonitor
 
-request_rates = [32]
-workload_profile = [(1800, 100)]
+request_rates = [8,32]
+workload_profile = [(100,1800),(1800, 100),(950,950)]
 
 sub_folder_path = sys.argv[1]
 
