@@ -19,33 +19,10 @@ if configs is None:
 
 def normalize_stage_configs(stage_config):
     gpu_ids = stage_config["gpus"]
-    if "tp" in stage_config and "pp" in stage_config:
-        return [("", {"gpus": gpu_ids, "tp": stage_config["tp"], "pp": stage_config["pp"]})]
+    if "tp" not in stage_config or "pp" not in stage_config:
+        raise ValueError("Invalid stage configuration: expected 'tp' and 'pp' values")
 
-    normalized_configs = []
-    for parallelism_configuration_name, parallelism_configuration in stage_config.items():
-        if parallelism_configuration_name == "gpus":
-            continue
-        if (
-            not isinstance(parallelism_configuration, dict)
-            or "tp" not in parallelism_configuration
-            or "pp" not in parallelism_configuration
-        ):
-            raise ValueError(
-                f"Invalid parallelism configuration '{parallelism_configuration_name}': "
-                "expected 'tp' and 'pp' values"
-            )
-        normalized_configs.append(
-            (
-                parallelism_configuration_name,
-                {
-                    "gpus": gpu_ids,
-                    "tp": parallelism_configuration["tp"],
-                    "pp": parallelism_configuration["pp"],
-                },
-            )
-        )
-    return normalized_configs
+    return [{"gpus": gpu_ids, "tp": stage_config["tp"], "pp": stage_config["pp"]}]
 
 
 def cleanup_ports(ports):
@@ -78,24 +55,15 @@ for model in models:
         prefill_configurations = normalize_stage_configs(config["prefill"])
         decode_configurations = normalize_stage_configs(config["decode"])
 
-        for prefill_parallelism, prefill_config in prefill_configurations:
-            for decode_parallelism, decode_config in decode_configurations:
-                # Example: gpu_split_equal_prefill_tp_heavy_tp4_pp1_decode_pp_heavy_tp1_pp4
+        for prefill_config in prefill_configurations:
+            for decode_config in decode_configurations:
                 configuration_name = "_".join(
                     filter(
                         None,
                         [
                             f"gpu_split_{gpu_split}",
-                            (
-                                f"prefill_{prefill_parallelism}_tp{prefill_config['tp']}_pp{prefill_config['pp']}"
-                                if prefill_parallelism
-                                else f"prefill_tp{prefill_config['tp']}_pp{prefill_config['pp']}"
-                            ),
-                            (
-                                f"decode_{decode_parallelism}_tp{decode_config['tp']}_pp{decode_config['pp']}"
-                                if decode_parallelism
-                                else f"decode_tp{decode_config['tp']}_pp{decode_config['pp']}"
-                            ),
+                            f"prefill_tp{prefill_config['tp']}_pp{prefill_config['pp']}",
+                            f"decode_tp{decode_config['tp']}_pp{decode_config['pp']}",
                         ],
                     )
                 )
