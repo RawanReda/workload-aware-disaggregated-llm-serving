@@ -1,6 +1,8 @@
+import csv
 import os
 import subprocess
 import sys
+import time
 
 import pandas as pd
 
@@ -25,7 +27,6 @@ print(f"Running benchmarks for sub folder: {sub_folder_path}")
 monitor = GPUMonitor(interval=1)
 
 
-
 def _summarise_series(series):
     return {
         "mean": series.mean(),
@@ -47,16 +48,6 @@ def summarise_gpu_measurements(measurements):
 
     if df.empty:
         return {}, empty_summary, empty_summary
-
-    # Find first sample where GPU activity begins
-    active_samples = df[df["gpu_utilization"] > 0]
-
-    if active_samples.empty:
-        benchmark_start = df["timestamp"].min()
-    else:
-        benchmark_start = active_samples["timestamp"].min()
-
-    df = df[df["timestamp"] >= benchmark_start]
 
     summary_by_gpu = {}
     for gpu_index, group in df.groupby("gpu_index"):
@@ -80,6 +71,7 @@ def summarise_gpu_measurements(measurements):
 
     return summary_by_gpu, prefill_summary, decoder_summary
 
+
 def write_gpu_summary(f, title, summary):
     util = summary["gpu_utilization"]
 
@@ -91,6 +83,7 @@ def write_gpu_summary(f, title, summary):
     f.write(f"  P95:    {util['p95']:.2f}%\n")
     f.write(f"  P99:    {util['p99']:.2f}%\n")
     f.write(f"  Max:    {util['max']:.2f}%\n")
+
 
 def write_gpu_measurements_summary(f, gpu_measurements):
     """Process and write GPU utilization summary to file."""
@@ -142,12 +135,15 @@ def write_gpu_measurements_summary(f, gpu_measurements):
 def run_single_benchmark(rate, input_len, output_len, filename):
     """Run a single vllm benchmark and collect GPU metrics."""
     bench_results_file = f"{results_dir}/vllm_bench_serve/{filename}.txt"
-    csv_file = f"{results_dir}/gpu_monitoring_csv/{filename}.csv"
+    csv_file_name = f"{results_dir}/gpu_monitoring_csv/{filename}.csv"
+
+    benchmark_start = None
+    benchmark_end = None
 
     with open(bench_results_file, "w") as f:
         f.write(f"Request Rate: {rate}\n")
         f.write(f"Input length: {input_len}, Output length: {output_len}\n")
-        
+
         process = subprocess.Popen([
             "vllm", "bench", "serve",
             "--base-url", "http://127.0.0.1:8000",
@@ -166,13 +162,27 @@ def run_single_benchmark(rate, input_len, output_len, filename):
         for line in process.stdout:
             f.write(line)
             if "Starting main benchmark run" in line:
-                monitor.start(csv_file)
+                benchmark_start = time.time()
+                f.write(f"Benchmark started at timestamp: {benchmark_start}\n")
+                monitor.start(csv_file_name)
 
         return_code = process.wait()
-        print(f"vLLM benchmark exited with code: {return_code}")
+        benchmark_end = time.time()
+        f.write(f"Benchmark ended at timestamp: {benchmark_end}\n")
+        f.write(f"Total benchmark duration: {benchmark_end - benchmark_start:.2f} seconds\n")
         gpu_measurements = monitor.stop()
-        write_gpu_measurements_summary(f, gpu_measurements)
-        
+
+        if benchmark_start is None:
+            benchmark_start = benchmark_end
+
+        filtered_measurements = [
+            measurement for measurement in gpu_measurements
+            if benchmark_start <= measurement["timestamp"] <= benchmark_end
+        ]
+
+        monitor.write_gpu_monitoring_csv(benchmark_start, benchmark_end, csv_file_name)
+        write_gpu_measurements_summary(f, filtered_measurements)
+
         return f
 
 

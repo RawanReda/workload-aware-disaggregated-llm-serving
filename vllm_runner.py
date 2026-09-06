@@ -48,7 +48,6 @@ def cleanup_ports(ports):
             print(f"Port {port} is free")
 
 
-
 for model in models:
     print(f"Running experiments for model: {model}")
     for gpu_split, config in configs.items():

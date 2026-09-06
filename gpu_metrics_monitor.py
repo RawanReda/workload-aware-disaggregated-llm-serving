@@ -27,23 +27,19 @@ class GPUMonitor:
             check=True,
         )
 
-        with open(self.csv_file, "a", newline="") as f:
-            writer = csv.writer(f)
+        for line in result.stdout.strip().splitlines():
+            gpu_index, gpu_utilization, memory_used, memory_total = map(int, line.split(","))
+            # Grafana can use Unix epoch timestamps in seconds.
+            timestamp = time.time()
 
-            for line in result.stdout.strip().splitlines():
-                gpu_index, gpu_utilization, memory_used, memory_total = map(int, line.split(","))
-                # Grafana can use Unix epoch timestamps in seconds.
-                timestamp = time.time()
-
-                measurement = {
-                    "timestamp": timestamp,
-                    "gpu_index": gpu_index,
-                    "gpu_utilization": gpu_utilization,
-                    "memory_used": memory_used,
-                    "memory_total": memory_total,
-                }
-                self.measurements.append(measurement)
-                writer.writerow([timestamp, gpu_index, gpu_utilization, memory_used, memory_total])
+            measurement = {
+                "timestamp": timestamp,
+                "gpu_index": gpu_index,
+                "gpu_utilization": gpu_utilization,
+                "memory_used": memory_used,
+                "memory_total": memory_total,
+            }
+            self.measurements.append(measurement)
 
     def _monitor(self):
         while not self.stop_event.is_set():
@@ -63,13 +59,32 @@ class GPUMonitor:
         if csv_file is not None:
             self.csv_file = csv_file
 
-        if not os.path.exists(self.csv_file):
-            with open(self.csv_file, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["timestamp", "gpu_index", "gpu_utilization", "memory_used", "memory_total"])
-
         self.thread = threading.Thread(target=self._monitor, daemon=True)
         self.thread.start()
+
+    def write_gpu_monitoring_csv(self, start_time=None, end_time=None, output_path=None):
+        if output_path is None:
+            output_path = self.csv_file
+
+        filtered_measurements = [
+            measurement for measurement in self.measurements
+            if (start_time is None or measurement["timestamp"] >= start_time)
+            and (end_time is None or measurement["timestamp"] <= end_time)
+        ]
+
+        with open(output_path, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["timestamp", "gpu_index", "gpu_utilization", "memory_used", "memory_total"])
+            for measurement in filtered_measurements:
+                writer.writerow([
+                    measurement["timestamp"],
+                    measurement["gpu_index"],
+                    measurement["gpu_utilization"],
+                    measurement["memory_used"],
+                    measurement["memory_total"],
+                ])
+
+        return filtered_measurements
 
     def stop(self):
         if self.thread is not None:
