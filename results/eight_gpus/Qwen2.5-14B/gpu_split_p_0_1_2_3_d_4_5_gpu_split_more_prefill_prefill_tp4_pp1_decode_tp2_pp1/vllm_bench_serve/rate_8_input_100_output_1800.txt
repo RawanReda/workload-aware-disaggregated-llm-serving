@@ -1,0 +1,212 @@
+Request Rate: 8
+Input length: 100, Output length: 1800
+Namespace(subparser='bench', bench_type='serve', dispatch_function=<function BenchmarkServingSubcommand.cmd at 0x797874bc2a20>, trust_remote_code=False, seed=0, num_prompts=1000, dataset_name='random', no_stream=False, dataset_path=None, no_oversample=False, skip_chat_template=False, enable_multimodal_chat=False, disable_shuffle=False, custom_output_len=256, custom_ensure_client_side_data=False, spec_bench_output_len=256, spec_bench_category=None, sonnet_input_len=550, sonnet_output_len=150, sonnet_prefix_len=200, sharegpt_output_len=None, timed_trace_chunk_hash_size=16, timed_trace_sec_multiplier=1, timed_trace_label_timestamp='timestamp', timed_trace_label_input_length='input_length', timed_trace_label_output_length='output_length', timed_trace_label_hash_ids='hash_ids', blazedit_min_distance=0.0, blazedit_max_distance=1.0, asr_max_audio_len_sec=inf, asr_min_audio_len_sec=0.0, random_input_len=1024, random_output_len=128, random_range_ratio='0.0', random_prefix_len=0, random_batch_size=1, no_reranker=False, random_mm_base_items_per_request=1, random_mm_num_mm_items_range_ratio=0.0, random_mm_limit_mm_per_prompt={'image': 255, 'video': 1}, random_mm_bucket_config={(256, 256, 1): 0.5, (720, 1280, 1): 0.5, (720, 1280, 16): 0.0}, hf_subset=None, hf_split=None, hf_name=None, hf_output_len=None, bfcl_categories=None, prefix_repetition_prefix_len=256, prefix_repetition_suffix_len=256, prefix_repetition_num_prefixes=10, prefix_repetition_output_len=128, speed_bench_dataset_subset='qualitative', speed_bench_output_len=4096, speed_bench_category=None, label=None, backend='openai', base_url='http://127.0.0.1:8000', host='127.0.0.1', port=8000, endpoint='/v1/completions', header=None, max_concurrency=None, model=None, input_len=100, output_len=1800, tokenizer=None, tokenizer_mode='auto', use_beam_search=False, logprobs=None, request_rate=8.0, burstiness=1.0, probe_request_rate=0.0, disable_tqdm=True, num_warmups=200, profile=False, save_result=True, save_detailed=True, append_result=False, metadata=None, result_dir='results/Qwen2.5-14B/gpu_split_p_0_1_2_3_d_4_5_gpu_split_more_prefill_prefill_tp4_pp1_decode_tp2_pp1/vllm_bench_serve', result_filename='rate_8_input_100_output_1800.json', ignore_eos=False, self_timed=None, percentile_metrics=None, metric_percentiles='99', goodput=None, request_id_prefix='bench-94a30e50-', top_p=None, top_k=None, min_p=None, temperature=None, frequency_penalty=None, presence_penalty=None, repetition_penalty=None, served_model_name=None, lora_modules=None, lora_assignment='random', ramp_up_strategy=None, ramp_up_start_rps=None, ramp_up_end_rps=None, ready_check_timeout_sec=0, chat_template_kwargs=None, extra_body=None, skip_tokenizer_init=False, insecure=False, plot_timeline=False, timeline_itl_thresholds='25,50', plot_dataset_stats=False)
+Model not specified, fetching first model from server...
+First model name: Qwen/Qwen2.5-14B, first model id: Qwen/Qwen2.5-14B
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO 09-06 22:17:40 [utils.py:90] Sampling input_len from [100, 100] and output_len from [1800, 1800]
+WARNING: /tokenize unavailable, skipping alignment.
+WARNING: vllm bench serve no longer sets temperature==0 (greedy) in requests by default. The default will be determined on the server side and can be model/API specific. For the old behavior, include --temperature=0.
+Starting initial single prompt test run...
+Skipping endpoint ready check.
+Warming up with 200 requests...
+Warmup run completed.
+Starting main benchmark run...
+Benchmark started at timestamp: 1788733099.5106053
+Traffic request rate: 8.0
+Burstiness factor: 1.0 (Poisson process)
+Maximum request concurrency: None
+Failed requests during benchmark run detected (capping to 10):
+Error 0: Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/client_proto.py", line 143, in connection_lost
+    uncompleted = self._parser.feed_eof()
+  File "aiohttp/_http_parser.pyx", line 590, in aiohttp._http_parser.HttpParser.feed_eof
+aiohttp.http_exceptions.TransferEncodingError: 400, message:
+  Not enough data to satisfy transfer length header.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/vllm/benchmarks/lib/endpoint_request_func.py", line 206, in async_request_openai_completions
+    async for chunk_bytes in response.content.iter_any():
+    ...<40 lines>...
+                        output.prompt_len = pt
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 460, in readany
+    await self._wait("readany")
+  File "/workspace/workload-aware-disaggregated-llm-serving/.venv/lib/python3.13/site-packages/aiohttp/streams.py", line 365, in _wait
+    await waiter
+aiohttp.client_exceptions.ClientPayloadError: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>
+
+
+                              Output tokens per second
+  16000 +-------------------------------------------------------------------+
+        |                                                                   |
+  14000 |             ******************* ***************                   |
+        |            ***       * **  *****   *           *                  |
+        |           *             *                      **                 |
+  12000 |          *                                      **                |
+        |         **                                       **               |
+  10000 |        **                                         **              |
+        |        *                                           *              |
+   8000 |       **                                           **             |
+        |      **                                             *             |
+        |     *                                                **           |
+   6000 |    **                                                 *           |
+        |   **                                                   *          |
+   4000 |   *                                                    *          |
+        |  *                                                      *         |
+        | **                                                       *        |
+   2000 | *                                                        **       |
+        |*                                                          *       |
+      0 +-------------------------------------------------------------------+
+        0       20     40      60     80     100    120     140    160     180
+
+                          Concurrent requests per second
+  350 +---------------------------------------------------------------------+
+      |               ***                     *  *******                    |
+      |              ** ************** ******* ****    *                    |
+  300 |             *                 **                *                   |
+      |           ***                                   **                  |
+  250 |          **                                      **                 |
+      |          *                                        **                |
+      |         **                                         *                |
+  200 |        **                                           *               |
+      |       **                                             *              |
+      |      **                                              **             |
+  150 |     **                                                **            |
+      |    **                                                  **           |
+      |   **                                                    *           |
+  100 |   *                                                      *          |
+      |  *                                                        *         |
+   50 | *                                                         **        |
+      | *                                                          *        |
+      |*                                                           **       |
+    0 +---------------------------------------------------------------------+
+      0       20      40     60      80     100     120    140     160     180
+============ Serving Benchmark Result ============
+Successful requests:                     999       
+Failed requests:                         1         
+Request rate configured (RPS):           8.00      
+Benchmark duration (s):                  161.86    
+Total input tokens:                      99900     
+Total generated tokens:                  1798200   
+Request throughput (req/s):              6.17      
+Output token throughput (tok/s):         11109.93  
+Peak output token throughput (tok/s):    14669.00  
+Peak concurrent requests:                343.00    
+Total token throughput (tok/s):          11727.15  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          137.57    
+Median TTFT (ms):                        136.59    
+P99 TTFT (ms):                           179.24    
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          21.50     
+Median TPOT (ms):                        21.64     
+P99 TPOT (ms):                           22.01     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           21.50     
+Median ITL (ms):                         21.17     
+P99 ITL (ms):                            29.46     
+==================================================
+Benchmark ended at timestamp: 1788733264.2117693
+Total benchmark duration: 164.70 seconds
+
+===============================================================
+GPU Utilisation Summary
+===============================================================
+
+Individual GPUs
+---------------------------------------------------------------
+GPU 0 (Prefill)
+---------------------------------------------------------------
+  Mean:   8.14%
+  Median: 0.00%
+  P90:    29.00%
+  P95:    34.00%
+  P99:    39.00%
+  Max:    49.00%
+
+GPU 1 (Prefill)
+---------------------------------------------------------------
+  Mean:   8.14%
+  Median: 0.00%
+  P90:    25.80%
+  P95:    30.00%
+  P99:    42.08%
+  Max:    47.00%
+
+GPU 2 (Prefill)
+---------------------------------------------------------------
+  Mean:   5.23%
+  Median: 0.00%
+  P90:    14.00%
+  P95:    17.70%
+  P99:    26.00%
+  Max:    54.00%
+
+GPU 3 (Prefill)
+---------------------------------------------------------------
+  Mean:   9.87%
+  Median: 0.00%
+  P90:    30.80%
+  P95:    39.20%
+  P99:    48.54%
+  Max:    68.00%
+
+GPU 4 (Decode)
+---------------------------------------------------------------
+  Mean:   97.94%
+  Median: 100.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+GPU 5 (Decode)
+---------------------------------------------------------------
+  Mean:   82.25%
+  Median: 100.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+
+GPU 6 (Unknown)
+---------------------------------------------------------------
+  Mean:   0.00%
+  Median: 0.00%
+  P90:    0.00%
+  P95:    0.00%
+  P99:    0.00%
+  Max:    0.00%
+
+GPU 7 (Unknown)
+---------------------------------------------------------------
+  Mean:   0.00%
+  Median: 0.00%
+  P90:    0.00%
+  P95:    0.00%
+  P99:    0.00%
+  Max:    0.00%
+
+Prefill GPUs (0, 1, 2, 3)
+---------------------------------------------------------------
+  Mean:   7.85%
+  Median: 0.00%
+  P90:    24.30%
+  P95:    32.00%
+  P99:    47.00%
+  Max:    68.00%
+
+Decode GPUs (4, 5)
+---------------------------------------------------------------
+  Mean:   90.10%
+  Median: 100.00%
+  P90:    100.00%
+  P95:    100.00%
+  P99:    100.00%
+  Max:    100.00%
+===============================================================

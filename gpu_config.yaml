@@ -32,31 +32,13 @@ gpu_configurations:
       tp: 2
       pp: 1
 
-8:
-  more_prefill:
-    prefill:
-      gpus: [0,1,2,3,4,5]
-      tp: 6
-      pp: 1
-    decode:
-      gpus: [6,7]
-      tp: 2
-      pp: 1
-  equal:
-    prefill:
-      gpus: [0,1,2,3]
-      tp: 4
-      pp: 1
-    decode:
-      gpus: [4,5,6,7]
-      tp: 4
-      pp: 1
-  more_decode:
-    prefill:
-      gpus: [0,1]
-      tp: 2
-      pp: 1
-    decode:
-      gpus: [2,3,4,5,6,7]
-      tp: 6
-      pp: 1
+ 8:
+    more_decode:
+      prefill:
+        gpus: [0,1]
+        tp: 2
+        pp: 1
+      decode:
+        gpus: [2,3,4,5]
+        tp: 4
+        pp: 1
