@@ -20,6 +20,12 @@ python3 vllm_runner.py
 
 The generated benchmark artifacts are stored under the `results/` directory.
 
+## Plot generation notebook
+
+A public Google Colab notebook used to generate plots from the collected benchmark results is available here:
+
+https://colab.research.google.com/drive/1HhKq-hDerlMaMIKQ9N0KecEofme-r0o4?usp=sharing
+
 ## File overview
 
 - `gpu_config.yaml` — defines the GPU partition layouts and tensor/pipeline parallel settings used for each experiment.
